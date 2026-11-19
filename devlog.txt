@@ -1,0 +1,23 @@
+Devlog [19/11/2026 09:40]
+
+Today I wanted to try out GitHub action so that I don't need to always deploy manually on my AICloud VPS so I created a repo with a nodejs simple http /health application now I am going to deploy it
+
+I did 'npm init -y' and then wrote server.js and a script to run in package.json '"start": "node server.js"' and tested it locally using 'xh' at first the http://localhost:3000/health was returning 3000 because I did req.method === '/GET' instead of just 'GET', I fixed the typo and it returned
+
+```
+PS C:\Users\User1> xh http://localhost:3000/health
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: aplication/json
+Date: Thu, 19 Nov 2026 04:22:13 GMT
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+{
+    "status": "ok"
+}
+```
+
+the port is 3000 but that port is already taken by golocal(I guess I should always keep 3000 open isn't it?) so I need to change the practise port to something else so I used 3001 and though why not use the environment all along? so switched to process.env.PORT but... again typo I wrote eve sorry my bad lets fix it still getting error sating PORT is undefined, ohh I need to do $env:PORT=3001 I see. (I will do the .env and .env.example later also I will practise react deploy ment later)
+
+now I will write the whole .gitignore manually because I had problem with auto .gitignore 

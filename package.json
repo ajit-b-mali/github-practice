@@ -1,0 +1,22 @@
+{
+  "name": "github-practice",
+  "version": "1.0.0",
+  "description": "Practising how github action works, how to manage issue/branches, etc.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajit-b-mali/GitHub-Practice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ajit-b-mali/GitHub-Practice/issues"
+  },
+  "homepage": "https://github.com/ajit-b-mali/GitHub-Practice#readme"
+}
