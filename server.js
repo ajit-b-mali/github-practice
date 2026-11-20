@@ -1,6 +1,28 @@
 const http = require('http');
 
 const server = http.createServer((req, res) => {
+    if (req.url === '/' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            name: 'GitHub Practice API',
+            version: '1.0.0',
+            message: 'Welcome!',
+            endpoints: [
+                {
+                    method: 'GET',
+                    path: '/',
+                    description: 'API information and available endpoints'
+                },
+                {
+                    method: 'GET',
+                    path: '/health',
+                    description: 'Health check'
+                }
+            ]
+        }));
+        return;
+    }
+
     if (req.url === '/health' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok' }));
