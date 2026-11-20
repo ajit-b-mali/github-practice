@@ -118,4 +118,71 @@ Oh no! it asked for password which is wrong. lets debug using
 'ssh -vvv -i "$HOME\.ssh\github_actions_vps" -o IdentitiesOnly=yes -p 20021 deploy@51.68.205.225 2>&1 | Select-String "Offering public key|Server accepts key|Authentications that can continue|Next authentication method|Authenticated to"' from that I noted one thing my public key is present but Its not using it and switching to password then I saw the permission of /Home/deploy/.ssh and /Home/deploy/.ssh/authorized_key and its was root:root so I changed it deploy:deploy 700 and 600 and changed ownership but still it not worked and get to know that I pasted that github_actions_vps in /root/.ssh/authorized_key on in deploy so I copied it to deploy user and it worked so ssh configuration is done
 
 Now I need to add that private key in GitHub actions. I go to repository setting -> secrets and variable -> action -> secret tab -> repository secret
-and created 4 key VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY. now before writing the deployment script I need VPS host-key verification which I got with 'ssh-keygen -F "[51.68.205.225]:20021" -f "$HOME\.ssh\known_hosts"' It contains ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256 and I only care about ssh-ed25519 but what is that command??
+and created 4 key VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY. now before writing the deployment script I need VPS host-key verification which I got with 'ssh-keygen -F "[51.68.205.225]:20021" -f "$HOME\.ssh\known_hosts"' It contains ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256 and I only care about ssh-ed25519 but what is that command?? I also checked on vps is that public key same or not using 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub'
+ with 'ssh-keygen -lf "$HOME\.ssh\known_hosts"' and both are same so moving forward to now I need to add host key to GitHub action, but why? I don't know. for that I did 'ssh-keyscan -p 20021 -t ed25519 51.68.205.255' and it said unsupported KEX method. so I am skipping the ssh-keyscan. But I still don't understand why know host required? and the answer is 
+
+- Authentication: Is this client allowed to log in to the server?
+- Host verification: Is this actually the server the client intended to connect to?
+This avoid man-in-the-middle attack if someone does vps spoofing, and we need it because GitHub actions runs on new machine always and it doesn't have its known_host file. VPS_SSH_KEY and VPS_KNOWN_HOSTS are not duplicate credentials. One lets GitHub Actions prove its identity to your VPS; the other lets GitHub Actions verify your VPS's identity
+
+Then, I opened the GitHub repository secrets and created new VPS_KNOWN_HOSTS with that '[51.68.205.225]:20021 ssh-ed25519 xxx' value
+
+
+Now finally coming to GitHub actions workflow
+
+first I need to create the deploy.yml file in .github/workflows/. I need to configure it to trigger whenever I push to main it should connect to vps over ssh
+
+Before writing the workflow, I need to give deploy permission to restart only this application's systemd service, without requiring a password.
+
+for that I logged in to root vps and 'visudo -f /etc/sudoers.d/github-practice' and in text editor added this line 'deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart github-practice, /usr/bin/systemctl is-active github-practice' and then validated it 'visudo -cf /etc/sudoers.d/github-practice' and on first go it '/etc/sudoers.d/github-practice: parsed OK'. This grants only the two systemd commands needed by our deployment workflow, not unrestricted sudo access.
+
+now I am doing deploy.yml
+
+```
+
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$VPS_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'cd /opt/apps/github-practice && git pull --ff-only origin main && sudo /usr/bin/systemctl restart github-practice && sudo /usr/bin/systemctl is-active github-practice'
+```
+
+this workflow does following things
+
+1. runs whenever I push to main
+2. prepares ssh credentials on GitHub runner
+3. connects to vps as deploy
+4. pulls the latest code from GitHub
+5. restarts Node.js systemd service
+6. checks that the service is active
