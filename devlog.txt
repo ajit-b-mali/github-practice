@@ -186,3 +186,5 @@ this workflow does following things
 4. pulls the latest code from GitHub
 5. restarts Node.js systemd service
 6. checks that the service is active
+
+I add, commit and pushed but error on line 10 because I used tabs, I need to use spaces. and also I didn't added $ to VPS_HOST, I get to know these error in repo -> action -> latest run, I noted and get to know that I specified when to run but I typed only half deploy.yml acceidently. lets fix this. I fixed and committed lets see what happens
