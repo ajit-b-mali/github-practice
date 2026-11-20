@@ -20,4 +20,102 @@ Transfer-Encoding: chunked
 
 the port is 3000 but that port is already taken by golocal(I guess I should always keep 3000 open isn't it?) so I need to change the practise port to something else so I used 3001 and though why not use the environment all along? so switched to process.env.PORT but... again typo I wrote eve sorry my bad lets fix it still getting error sating PORT is undefined, ohh I need to do $env:PORT=3001 I see. (I will do the .env and .env.example later also I will practise react deploy ment later)
 
-now I will write the whole .gitignore manually because I had problem with auto .gitignore 
+now I will write the whole .gitignore manually because I had problem with auto .gitignore. for now I just skipped the node_modules/ and .env. then I committed by adding my git config --global user.name and user.email and then signing to GitHub. no I am moving to next step  the deployement
+
+for the deployement I am choosing SSH-based deployment. I recently learned that GitHub actions runs on GitHub hosted runner so it will save my ram. and for process management I am using PM2.
+
+Now I am thinking where to put all the project files? as keeping everything together is important isn't it?
+
+I choosed /var/www/apps for static sites and /opt/apps for deployed applications and decided to create a deploy user so the scripts wont have full access. I created new user using 'adduser deploy' and kept the password ajitMali@2705. then I created .ssh folder in home/deploy and copied the authorized_keys 'root@dev-server:/home/deploy# cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys' and set the ownership using chown and permissions using chmod to 700 and 600 and then logged in to deploy
+
+as I logged in to deploy I created 'mkdir -p /opt/apps' but I got permission error because /opt is owned by root so I switched the use to root 'su - root' created that apps and changed the ownership to deploy. I didn't changed owner ship of /opt because its system directory and deploy want to own application directory
+
+now moving to next step I cloned my github-practice repo and then npm install and pm2 start server.js --name github-practice and to check status pm2 status and pm2 logs github-practice. then I installed nvm and then installed node and set alias default to 'lts/*' why? I don't know but something is wrong. Node.js binary requires libatomic.c.so.1 and ubuntu don't have it so lets install it and this error is only for node 26. now I need to remove the node from the root move all deploy data to deploy user so much work...
+
+#####################################
+devlog [2026-11-20]
+#####################################
+
+Today I started with 'apt install -y libatomic1' as node26 required it and also did apt update, apt upgrade that previously didn't worked
+
+now I need to install pm2 for user but I am thinking why not try systemd like its standard isn't it?
+
+for that I need to create a service file at '/etc/systemd/system/github-practice.service' It will run as deploy, use node26 installed via deploy's nvm, restart on failure and start automatically after reboot. The only catch with systemd is that it don't know node executable path I need to put that in service file.
+
+I got the path from 'which node' command its '/home/deploy/.nvm/versions/node/v26.13.1/bin/node'. I need to create github-practice.service file as root. and wrote this
+
+```
+
+[Unit]
+Description=GitHub Practice Node.js API
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/apps/github-practice
+ExecStart=/home/deploy/.nvm/versions/node/v26.13.1/bin/node /opt/apps/github-practice/server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3001
+
+[Install]
+WantedBy=multi-user.target
+```
+
+After that I verified the syntax using 'systemd-analyze verify /etc/systemd/system/github-practice.service' and restarted the systemd using 'systemctl daemon-reload' now I will start the service 'systemctl start github-practice' and later checked its status 'systemctl status github-practice' after verifying the service is 'Active: active (running)' I enabled auto start using 'systemctl enable github-practice'
+
+After everything done successful on first try luckily I noted down
+
+```
+Main PID: 164968
+Memory: 11 MB
+User: deploy
+Port: 3001
+```
+
+now the main thing testing it using 'curl http://localhost:3001/health'. I have a question why I didn't used 'npm start'? the test run successfully and return {"status": "ok"}, and I checked the log 'journalctl -u github-practice -f'
+
+I also noted down few useful systemctl commands
+
+```
+systemctl status github-practice
+systemctl restart github-practice
+systemctl stop github-practice
+journalctl -u github-practice -f
+```
+
+now after successfully starting the service i will now focus on github-actions for that I need to create a SSH key, is it one time for all project? of separate of each? I just got to know that SSH key generation is machine based. so I need to create SSH key on my personal laptop? so SSH key is just a TEXT
+
+```
+-----BEGIN OPENSSH PRIVATE KEY-----
+...key data...
+-----END OPENSSH PRIVATE KEY-----
+```
+
+so I am generating it on my company laptop and then copy to mobile, when I reach home I will decopy it to my laptop. I need to understand SSH authentication!!!
+
+What I learned that private key remains with us and public key remains on vps. I can technically use password based authentication but ssh key are more safer way because we can revoke them and password based have a problem they are also used elsewhere. I may have need vps->GitHub ssh pair key if repository is private. for now only github->private is needed
+
+So now creating a dedicated Ed25519 SSH key pair for GitHub Actions → VPS
+
+on my windows laptop I did 'ssh-keygen -t ed25519 -C "github-actions-to-vps" -f "$HOME\.ssh\github_actions_vps" and entered a passphrase same as vps password. Ohhh now I made it complex its better to have no passphrase so i am removing old keys and creating new keys
+
+now I have
+- github_actions_vps - private key
+- github_actions_vps.pub - public key
+
+I also get fingerprint and randomart but I don't need them now, Then I copied the public key and pasted in roots ~/.ssh/authorized_key on new line because I needed old keys.
+
+Now before going to GitHub actions I am testing it using
+
+'ssh -i "$HOME\.ssh\github_actions_vps" -o IdentitiesOnly=yes -p 20021 deploy@51.68.205.225'
+
+Oh no! it asked for password which is wrong. lets debug using 
+
+'ssh -vvv -i "$HOME\.ssh\github_actions_vps" -o IdentitiesOnly=yes -p 20021 deploy@51.68.205.225 2>&1 | Select-String "Offering public key|Server accepts key|Authentications that can continue|Next authentication method|Authenticated to"' from that I noted one thing my public key is present but Its not using it and switching to password then I saw the permission of /Home/deploy/.ssh and /Home/deploy/.ssh/authorized_key and its was root:root so I changed it deploy:deploy 700 and 600 and changed ownership but still it not worked and get to know that I pasted that github_actions_vps in /root/.ssh/authorized_key on in deploy so I copied it to deploy user and it worked so ssh configuration is done
+
+Now I need to add that private key in GitHub actions. I go to repository setting -> secrets and variable -> action -> secret tab -> repository secret
+and created 4 key VPS_HOST, VPS_PORT, VPS_USER, VPS_SSH_KEY. now before writing the deployment script I need VPS host-key verification which I got with 'ssh-keygen -F "[51.68.205.225]:20021" -f "$HOME\.ssh\known_hosts"' It contains ssh-ed25519, ssh-rsa, ecdsa-sha2-nistp256 and I only care about ssh-ed25519 but what is that command??
