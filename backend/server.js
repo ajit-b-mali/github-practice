@@ -1,4 +1,5 @@
 const http = require('http');
+const healthV1 = require('./v1/routes/health');
 
 const server = http.createServer((req, res) => {
     if (req.url === '/' && req.method === 'GET') {
@@ -23,9 +24,8 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    if (req.url === '/health' && req.method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok' }));
+    if (req.url === '/api/v1/health' && req.method === 'GET') {
+        healthV1(req, res);
         return;
     }
 
@@ -33,8 +33,8 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ message: 'Not Found' }));
 });
 
-console.log(process.env.PORT);
 const PORT = process.env.PORT || 3001;
+
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

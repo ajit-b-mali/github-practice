@@ -187,4 +187,120 @@ this workflow does following things
 5. restarts Node.js systemd service
 6. checks that the service is active
 
-I add, commit and pushed but error on line 10 because I used tabs, I need to use spaces. and also I didn't added $ to VPS_HOST, I get to know these error in repo -> action -> latest run, I noted and get to know that I specified when to run but I typed only half deploy.yml acceidently. lets fix this. I fixed and committed lets see what happens
+I add, commit and pushed but error on line 10 because I used tabs, I need to use spaces. and also I didn't added $ to VPS_HOST, I get to know these error in repo -> action -> latest run, I noted and get to know that I specified when to run but I typed only half deploy.yml acceidently. lets fix this. I fixed and committed lets see what happens, Ohhhhhhhhhhhh! It Worked successfully
+
+now final check adding / which will return basic information and it worked Finalllllllllly
+
+=====================================
+[2026/11/21]
+=====================================
+
+Now as nodejs CI/CD is done its simple, I just needed git pull, systemd restart, I want to do react now, because it has build system.
+
+recently I also came across these
+
+```
+labels, component labels, priority labels
+
+milestone
+
+.github/ISSUE_TEMPLATE/bug_report.md
+.github/ISSUE_TEMPLATE/bug_report.yml
+.github/ISSUE_TEMPLATE/feature_request.yml
+.github/pull_request_template.md
+
+Branch Naming: Use prefixes matching your test case IDs, such as fix/TC-01-events-search or feat/TC-02-group-photo.
+Branch Protection (Settings > Branches): Protect your main branch by requiring Pull Requests before merging and enabling status checks so broken code isn't pushed directly.
+README.md: Project overview, tech stack, local setup instructions (npm install, .env.example keys), and architecture notes.
+CONTRIBUTING.md: Branch naming convention (e.g., fix/tc-01-events-search, feat/tc-02-group-photo) and commit message rules (feat:, fix:, ui:).
+Branch Protection Rules (Settings → Branches): Protect main so code can only be merged via Pull Requests after passing checks/reviews.
+```
+
+which I want to try
+
+now first I created backend folder delete old package.json, created new package.json in backend because I don't have any dependencies. now again in root folder and creating vite project. 'npm create vite@latest frontend -- --template react'. From ESLint and Oxlint I am choosing Oxline because its says its new, small and fast.
+
+then i check working of both
+- frontend - http://localhost:5273
+- backend - http://localhost:3001
+
+now I am connecting frontend with backend using development proxy in vite.config.js like this and I decided to use the /api/v1/etc so that if app grows I can have maintanability
+
+```
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        chageOrigin: true,
+      },
+    },
+  },
+})
+```
+
+I researched it a beat and get to know that
+
+```
+
+backend/
+├── v1/
+│   ├── routes/
+│   │   ├── health.js
+│   │   ├── users.js
+│   │   └── auth.js
+│   ├── controllers/
+│   ├── services/
+│   └── middleware/
+├── v2/
+│   ├── routes/
+│   ├── controllers/
+│   ├── services/
+│   └── middleware/
+├── config/
+├── database/
+├── utils/
+├── jobs/
+├── storage/
+├── tests/
+├── server.js
+└── package.json
+```
+
+This is the last structure will be if I make this application grow. also backend/api/v1 or backend/v1 I am not thinking about that now so currently second option is better because I don't have those test, config, database, folders
+
+
+now created a v1/routes folder and added a health.js in it
+
+```
+function health(req, res) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+        status: 'ok',
+        version: 'v1',
+    });
+}
+
+module.exports = health;
+```
+
+now its time to register that route to backend/server.js
+
+```
+const healthV1 = require('./v1/routes/health');
+
+const server = http.createServer((req, res) => {
+    if (req.url === '/api/v1/health' && req.method === 'GET') {
+        healthV1(req, res);
+        return;
+    }
+});
+```
+
+This delegate those responsibilities to health route. now testing. its worked. now testing vite proxy on http://localhost:5173/api/v1/health, at first I accidently forgot to run backend as well. again testing, it worked.
+
+now I am cleaning the vite default project. and now connecting frontend to backend. done everything working fine. now move to git first make gitignore strong
