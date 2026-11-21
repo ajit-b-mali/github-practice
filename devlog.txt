@@ -353,3 +353,35 @@ systemctl status github-practice
 ```
 
 now backend is working from the monorepo location, lets do frontend. created github-practice in /var/www and changed its ownership to deploy deploy
+
+now lets do the frontend, Adding these in .github/workflows/deploy.yml before the Configure ssh
+
+```
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+```
+
+- checkout downloads my repository in GitHub runner
+- setup-node installs node.js 26
+- npm ci installs exactly the dependencies recorder in lock file
+- npm run build generates frontend/dist/
+
+I had error in action/setup-note here fixed it with node
+
+Now its time to transfer that dist to vps
