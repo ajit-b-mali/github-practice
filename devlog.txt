@@ -304,3 +304,52 @@ const server = http.createServer((req, res) => {
 This delegate those responsibilities to health route. now testing. its worked. now testing vite proxy on http://localhost:5173/api/v1/health, at first I accidently forgot to run backend as well. again testing, it worked.
 
 now I am cleaning the vite default project. and now connecting frontend to backend. done everything working fine. now move to git first make gitignore strong
+
+```
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Keep example environment files
+!.env.example
+
+# Build output
+dist/
+
+# Logs
+*.log
+```
+
+then i confirmed that .gitignore is working using `git status --short --ignored`
+
+```
+PS C:\dev\Workspace\Experiements\github-practice> git status --short --ignored
+ M .gitignore
+ M devlog.txt
+ D package.json
+ D server.js
+?? backend/
+?? frontend/
+!! frontend/dist/
+!! frontend/node_modules/
+```
+
+now I will update .github/workflows/deploy.yml so that it can handle
+- buid react on GitHub action/runner? what is runner?
+- deploy frontend/dist to vps
+- pull the latest backend source
+- restart the node.js system service
+
+First I changed the working directory and exec start command, reload the configurations
+
+```
+systemctl daemon-reload
+systemctl restart github-practice
+systemctl status github-practice
+```
+
+now backend is working from the monorepo location, lets do frontend. created github-practice in /var/www and changed its ownership to deploy deploy
