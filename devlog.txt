@@ -385,3 +385,19 @@ now lets do the frontend, Adding these in .github/workflows/deploy.yml before th
 I had error in action/setup-note here fixed it with node
 
 Now its time to transfer that dist to vps
+
+```
+
+      - name: Deploy frontend
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -P "$VPS_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -r frontend/dist/. \
+            "$VPS_USER@$VPS_HOST:/var/www/github-practice/"
+```

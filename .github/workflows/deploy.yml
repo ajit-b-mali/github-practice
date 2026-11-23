@@ -29,6 +29,19 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Deploy frontend
+        env:
+          VPS_HOST: ${{ secrets:VPS_HOST }}
+          VPS_PORT: ${{ secrets:VPS_PORT }}
+          VPS_USER: ${{ secrets:VPS_USER }}
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            -P "$VPS_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -r frontend/dist/. \
+            "$VPS_USER@$VPS_PORT:/var/www/github-practice"
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -47,8 +60,8 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key \
-          -p "$VPS_PORT" \
-          -o IdentitiesOnly=yes \
-          -o StrictHostKeyChecking=yes \
-          "$VPS_USER@$VPS_HOST" \
-          'cd /opt/apps/github-practice && git pull --ff-only origin main && sudo /usr/bin/systemctl restart github-practice && sudo /usr/bin/systemctl is-active github-practice'
+            -p "$VPS_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'cd /opt/apps/github-practice && git pull --ff-only origin main && sudo /usr/bin/systemctl restart github-practice && sudo /usr/bin/systemctl is-active github-practice'
