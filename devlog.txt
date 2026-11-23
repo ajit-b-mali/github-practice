@@ -26,7 +26,7 @@ for the deployement I am choosing SSH-based deployment. I recently learned that 
 
 Now I am thinking where to put all the project files? as keeping everything together is important isn't it?
 
-I choosed /var/www/apps for static sites and /opt/apps for deployed applications and decided to create a deploy user so the scripts wont have full access. I created new user using 'adduser deploy' and kept the password ajitMali@2705. then I created .ssh folder in home/deploy and copied the authorized_keys 'root@dev-server:/home/deploy# cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys' and set the ownership using chown and permissions using chmod to 700 and 600 and then logged in to deploy
+I choosed  for static sites and /opt/apps for deployed applications and decided to create a deploy user so the scripts wont have full access. I created new user using 'adduser deploy' and kept the password ajitMali@2705. then I created .ssh folder in home/deploy and copied the authorized_keys 'root@dev-server:/home/deploy# cp /root/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys' and set the ownership using chown and permissions using chmod to 700 and 600 and then logged in to deploy
 
 as I logged in to deploy I created 'mkdir -p /opt/apps' but I got permission error because /opt is owned by root so I switched the use to root 'su - root' created that apps and changed the ownership to deploy. I didn't changed owner ship of /opt because its system directory and deploy want to own application directory
 
@@ -401,3 +401,5 @@ Now its time to transfer that dist to vps
             -r frontend/dist/. \
             "$VPS_USER@$VPS_HOST:/var/www/github-practice/"
 ```
+
+I accidently put this part above the bps setup configuration so some file missing error was happening
