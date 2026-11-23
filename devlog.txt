@@ -402,4 +402,51 @@ Now its time to transfer that dist to vps
             "$VPS_USER@$VPS_HOST:/var/www/github-practice/"
 ```
 
-I accidently put this part above the bps setup configuration so some file missing error was happening
+I accidently put this part above the bps setup configuration so some file missing error was happening now that application is running now I need to configure the nginx to send /api to localhost:3001
+
+first I checked whether nginx is available or not nginx -v
+for that I will use a clean, standard nginx configuration
+
+- Nginx site configuration -> /etc/nginx/sites-available/github-practice
+- Enabled site symlink -> /etc/nginx/sites-enabled/github-practice
+- React Production files -> /var/www/github-practice
+- Node.js backend -> 127.0.0.1:3001
+- API URL -> /api/v1/health
+
+for that I will create first configuration
+
+```
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name 51.68.205.225;
+
+    root /var/www/github-practice;
+    index index.html;
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # React frontend
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+after that I create a symlink to enable the site using `ln -s /etc/nginx/sites-available/github-practice /etc/nginx/sites-enabled/github-practice`
+
+This keeps the actual configuration in sites-available while enabling it through sites-enabled
+
+later I check syntax errors using `nginx -t` and fixed them and reloaded the nginx using `systemctl reload nginx` and tested it using `curl -i -H "Host: 51.68.205.225" http://127.0.0.1/api/v1/health` the problem was... it was return another programs output. I accidently entered 30001 instead of 3001 in configuration
+
+fixed type -> tested syntax -> reloaded nginx -> 
