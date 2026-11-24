@@ -449,4 +449,327 @@ This keeps the actual configuration in sites-available while enabling it through
 
 later I check syntax errors using `nginx -t` and fixed them and reloaded the nginx using `systemctl reload nginx` and tested it using `curl -i -H "Host: 51.68.205.225" http://127.0.0.1/api/v1/health` the problem was... it was return another programs output. I accidently entered 30001 instead of 3001 in configuration
 
-fixed type -> tested syntax -> reloaded nginx -> 
+fixed type -> tested syntax -> reloaded nginx -> test -> checked result -> success
+
+==========================
+[2026/11/24]
+==========================
+
+now I will make it live github-practice.tejashreedumasia.me, for that I added a A record with github-practice with value of 51.68.205.225, and added a github-practice.tejashreedumasia.me -> 80 to aiccloud.in and verified it, I don't need ssl certificate because aiccloud provide it.
+
+then I will update the nginx configuration, reload if and test it
+
+The problem qevvf.aiccloud.online also serving github-practice why? because the default was not enabled and then the last enabled becomes default
+
+so now I am enabling it `ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default` then check syntax error and then reload nginx and it worked showing me the nginx page.
+
+the flow of nginx is this
+
+```
+1. Create a configuration file in /etc/nginx/sites-available/.
+2. Define the server block:
+	- listen — port and IP address to listen on (usually port 80 for HTTP).
+	- server_name — domain name(s) this block handles.
+	- root — website's document root (file location).
+	- index — default file to serve.
+	- location — rules for handling URL paths, such as static files or API proxying.
+3. Create a symbolic link in /etc/nginx/sites-enabled/ using ln -s path destination.
+4. Test the configuration using nginx -t.
+5. Reload Nginx using systemctl reload nginx.
+```
+
+now my task is to learn the nginx's sites-available language???
+-----------------------------------------
+Now I will practice GitHub branching and issues, the best approach for a sole developer is 
+
+- main - stable, working code
+- one branch per task or issue
+- pull requests (PRs) to merge changes into main
+- GitHub issues to track bugs, features, and improvements
+- never work directly on main
+- merge only after checking and testing the changes
+
+The branch naming conventions will be type/issue-number-short-description
+
+- new feature -> feature/ -> feature/12-user-auth
+- bug fix -> fix/ -> fix/15-login-validation
+- Documentation -> docs/ -> docs/18-api-readme
+- Refactoring -> refactor/ -> refactor/21-health-route
+- Maintenance -> chore/ -> chore/25-update-dependencies
+
+The base branch will always be main, and I will delete that branch if it upload to GitHub and successfully merges. My main question is that what if I am working on multiple task at same point? and How the commits will be named?, and what should the PR request should contain?
+
+now every new issue branch must start from main and update main not old main so pull before branch
+
+now if I am working on multiple task example #12 and #15
+
+```
+I started work on #12 -> add user authentication
+
+so I did
+
+git switch main
+git pull origin main
+git switch -c feature/12-user-auth
+
+I started working on #12 and made two commits
+1. Add user model
+2. Add registration endpoint
+
+but whole issue isn't finished yed and I need to fix #15 login validation
+
+so I can do
+
+git switch main
+git pull origin main
+git switch -c fix/15-login-validation
+
+now If there was uncommited changes I would have done in #12
+git add .
+git commit -c "xxx something"
+
+or temporary save changes using
+`git stash`
+and later
+git switch feature/12-user-auth
+git stash pop
+
+
+I will mostly try to commit till meaningful work before working on urgent tasks
+```
+
+Now my question is what if both work on same files?
+
+```
+main has login.js
+function login(username, password) {
+    // Basic login
+}
+
+I created feature/12-user-auth and modify login.js
+
+function login(username, password) {
+    // Authentication logic
+    // Generate user session
+}
+
+I commit the work but issue is unfinished
+
+I start the #15 and modify login.js
+
+function login(username, password) {
+    if (!username || !password) {
+        throw new Error('Credentials required');
+    }
+
+    // Basic login
+}
+
+I commit, test, and merge the issue #15 in main
+
+But #12 and earlier version of login.js
+so I do
+
+git switch feature/12-user-auth
+git merge main
+
+1. if Changes don't conflict fine everything is normal
+2. if Changes conflict -> I need to manually make a edit then commit that conflict file
+```
+
+I have new few question merge, rebase which one??? for now I will use merge
+what if main is changed online then????
+what if PR gives merge conflict????
+how do I manage PR commit history or name????
+
+I will not include issue number in the commit, I will include it in PR title and PR description with Closes #12
+
+------------- 12:44PM --------------------------------
+
+discussion so far
+
+- Branch: type/issue-number-description
+- Each issue gets an independent branch from updated main.
+- Merge latest main into unfinished branches when needed.
+- Delete branches after merging.
+- Commits: type: description
+- PR title: #issue-number Description
+- PR description: Closes #issue-number
+
+Now the last point PR Management
+
+As PR gives checkpoint to review my changes before they become part of stable codebase I will use them and make the main un mergable directly
+
+There are two approaches of creating PR, 1. after work completion, 2. as soon as I start working
+
+How Draft PR works
+1. Create your issue branch.
+2. Make your initial changes.
+3. Push the branch to GitHub.
+4. Open a Draft Pull Request.
+5. Continue coding and pushing commits normally.
+6. When finished, mark the PR as Ready for review.
+7. Review, test, and merge.
+
+Normal PR workflow
+1. Create your issue branch.
+2. Complete the entire task.
+3. Test your changes locally.
+4. Commit your changes.
+5. Push the branch to GitHub.
+6. Open a Pull Request (it is immediately ready for review).
+7. Review your changes.
+8. Merge the PR into main.
+9. Delete the feature branch.
+
+for now I will create PR after work is done, now here comes a PR Template so everything is same structure
+
+```
+## Summary
+<!-- What did you change? Briefly describe the implementation. -->
+
+## Motivation
+<!-- Why was this change necessary? What problem does it solve? -->
+
+## Changes
+<!-- List the important changes made. -->
+- 
+- 
+
+## Testing
+<!-- How did you verify that it works? -->
+- [ ] Tested locally
+- [ ] Verified expected behaviour
+- [ ] Checked for regressions
+
+## Screenshots
+<!-- Add screenshots or screen recordings for frontend changes. Remove this section if not applicable. -->
+
+## Related Issue
+Closes #
+```
+
+and put this file in .github/pull_request_template.md
+
+I get to know that we can have multiple templates I will see in that later???
+
+as PR management is done now I will see ISSUE management
+
+for issue types I will use labels
+
+1. Type lable
+- feature -> New functionality
+- bug -> Something isn't working correctly
+- improvement -> Improve existing functionality
+- refactor -> Improve code structure without changing behaviour
+- documentation -> Documentation-related work
+- chore -> Maintenance, dependencies, configuration
+
+2. priority labels
+- priority: critical ->	 Application-breaking or severe issue
+- priority: high -> 	 Important, should be addressed soon
+- priority: medium -> 	 Normal priority
+- priority: low	Minor -> improvement or polish
+
+and The GitHub issue should contain 
+
+- Title – What needs to be done?
+- Description – What is the requirement or problem?
+- Expected Behaviour – What should happen?
+- Acceptance Criteria – How do we know the task is complete?
+- Additional Context – Screenshots, references, technical notes, etc.
+
+and for issue template I am using yml files which creates forms automatically 
+
+```
+.github/
+└── ISSUE_TEMPLATE/
+    ├── feature.yml
+    ├── bug.yml
+    └── improvement.yml
+```
+
+now fot issue status management there are 2 options one is GitHub issues only open and closed, I manually track them and 2nd option is GitHub projects todo, in progress, in review, done
+
+I will use manuall approavh, I will use Closes #12 to autoclose issue and I will add branch protection to main but later after everything is successful to avoid accidental commits to main
+
+In Settings → Rules → Rulesets → New ruleset → New branch ruleset
+
+- Require a pull request before merging	Enable
+- Require approvals	Skip for now
+- Require status checks to pass	Later
+- Require conversation resolution	Optional
+- Restrict force pushes	Enable
+- Restrict deletions	Enable
+
+my question is if I locally commit to main, how do I push code???
+
+what is git fetch vs git pull, what is git merge main vs git merge origin/main?
+
+Agreed points so far
+
+Create an issue with an appropriate label.
+Create a branch from updated main.
+Commit changes using Conventional Commits.
+Push your branch to GitHub.
+Open a normal or draft PR depending on progress.
+Synchronize with main using merge when necessary.
+Resolve conflicts locally if they occur.
+Review and test the completed PR.
+Squash and merge into main.
+Delete the feature branch and update local main.
+
+now that I have understood 
+
+Branch naming convention
+Issue-based development
+Conventional commit messages
+PR template
+Issue templates
+main branch protection
+PR-based merging
+Keeping local branches synchronized
+
+I will move on to CI
+---------------------------------------------
+
+isn't we already did .GitHub/workflow/demploye.yml so I get to know that
+
+- CI (Continuous Integration): Automatically runs checks, tests, linting, and builds when you push code or open a PR.
+- CD (Continuous Deployment): Automatically deploys your application after changes are merged into main.
+
+so the deploy.yml was just basically CD.
+
+I will do CI later??????????
+
+now remaining things are
+
+Yes. Your GitHub workflow is already in good shape. I wouldn't spend more time configuring GitHub right now.
+
+There are a few things worth knowing as you start working on real projects:
+
+| Topic               | Why it matters                                               | Priority      |
+| ------------------- | ------------------------------------------------------------ | ------------- |
+| `.gitignore`        | Prevent committing `node_modules`, `.env`, build files, etc. | Essential     |
+| Git tags & releases | Mark stable versions such as `v1.0.0`                        | Useful        |
+| Git stash           | Temporarily save uncommitted changes when switching branches | Useful        |
+| Git cherry-pick     | Bring a specific commit from one branch into another         | Later         |
+| Git revert          | Safely undo a commit that has already been pushed            | Essential     |
+| GitHub Secrets      | Store deployment credentials securely for Actions            | Essential     |
+| GitHub Releases     | Publish versioned releases of your project                   | Useful        |
+| CODEOWNERS          | Automatically request reviews from specific contributors     | Team projects |
+
+**My recommendation:** Before moving on, make sure you understand these three:
+
+1. `.gitignore`
+2. `git revert` vs `git reset`
+3. Git tags and semantic versioning (`v1.0.0`, `v1.1.0`, etc.)
+
+These are practical skills you'll use across almost every project.
+
+We can take them one at a time.
+
+from that I will choose
+
+GitHub releases
+
