@@ -773,3 +773,243 @@ from that I will choose
 
 GitHub releases
 
+=========================================
+2026/11/26
+=========================================
+
+now I want to restart everything from scratch and learn each step neatly for doing this I am going to reinstall the ubuntu 24, and before that I will backup few files like ssh keys, env files, database, etc
+
+for that first I took the ssh keys, now I will take .env, I tried to find the .env file for frontend but didn't get it so leaving as it now... lets see what I can do, installing Ubuntu 24.04 LTS
+
+after installation when I tried to login I got error
+
+```
+PS C:\dev\Workspace> ssh root@51.68.205.225 -p 20021
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+SHA256:uLmOl4Sd3UM5SmwCAq5qhAaUVkhJM1ZpD9is7kzh2e4.
+Please contact your system administrator.
+Add correct host key in C:\\Users\\User1/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in C:\\Users\\User1/.ssh/known_hosts:3
+Host key for [51.68.205.225]:20021 has changed and you have requested strict checking.
+Host key verification failed.
+```
+
+I tried changing the password, still no use,
+
+I need to remove the old key using `ssh-keygen -R "[51.68.205.225]:20021"`
+
+then `ssh root@51.68.205.225 -p 20021` worked and recreated the ssh fingerpring
+
+when I opened its was saying  
+
+New release '26.04.1 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+so I am going to do it, before I need some setup I guess, because its stopping me until I do apt update, apt full-upgrade -y
+
+it asked me and did 2. keep the local version currently installed  
+
+```
+then I did root@dev-server:~# test -f /run/reboot-required && echo "Reboot required" || echo "No reboot required"
+Reboot required
+
+and root@dev-server:~# sshd -t
+root@dev-server:~# ss -tlnp | grep ssh
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=13360,fd=3),("systemd",pid=1,fd=72))
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=13360,fd=4),("systemd",pid=1,fd=73))
+```         
+
+
+I don't know why??
+
+Then i did `reboot` and logged in again
+
+I changed my mind I will keep the 24.04 LTS and redownload it again
+
+done and the output is
+
+```
+root@dev-server:~# whoami
+root
+root@dev-server:~# hostnamectl
+ Static hostname: dev-server
+       Icon name: computer-container
+         Chassis: container ☐
+      Machine ID: bba91aa95be84da2add82a0f844f6091
+         Boot ID: 7fdc9753fe414d09866d66018efc6534
+  Virtualization: lxc
+Operating System: Ubuntu 24.04 LTS
+          Kernel: Linux 7.0.14-28-pve
+    Architecture: x86-64
+root@dev-server:~# cat /etc/os-release
+PRETTY_NAME="Ubuntu 24.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+root@dev-server:~# free -h
+               total        used        free      shared  buff/cache   available
+Mem:           1.0Gi        45Mi       712Mi       8.1Mi       274Mi       978Mi
+Swap:          256Mi          0B       256Mi
+root@dev-server:~# df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/loop22     9.8G  667M  8.6G   8% /
+root@dev-server:~# nproc
+1
+root@dev-server:~# lscpu
+Architecture:                x86_64
+  CPU op-mode(s):            32-bit, 64-bit
+  Address sizes:             39 bits physical, 48 bits virtual
+  Byte Order:                Little Endian
+CPU(s):                      8
+  On-line CPU(s) list:       0
+  Off-line CPU(s) list:      1-7
+Vendor ID:                   GenuineIntel
+  Model name:                Intel(R) Xeon(R) CPU E3-1270 v6 @ 3.80GHz
+    CPU family:              6
+    Model:                   158
+    Thread(s) per core:      2
+    Core(s) per socket:      4
+    Socket(s):               1
+    Stepping:                9
+    CPU(s) scaling MHz:      95%
+    CPU max MHz:             4200.0000
+    CPU min MHz:             800.0000
+    BogoMIPS:                7599.80
+    Flags:                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe
+                              syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmpe
+                             rf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe po
+                             pcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb pti ssbd ibrs ibpb stibp tp
+                             r_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflusho
+                             pt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp vnmi md_clear
+                             flush_l1d arch_capabilities
+Virtualization features:
+  Virtualization:            VT-x
+Caches (sum of all):
+  L1d:                       128 KiB (4 instances)
+  L1i:                       128 KiB (4 instances)
+  L2:                        1 MiB (4 instances)
+  L3:                        8 MiB (1 instance)
+NUMA:
+  NUMA node(s):              1
+  NUMA node0 CPU(s):         0-7
+Vulnerabilities:
+  Gather data sampling:      Vulnerable
+  Ghostwrite:                Not affected
+  Indirect target selection: Not affected
+  Itlb multihit:             KVM: Mitigation: Split huge pages
+  L1tf:                      Mitigation; PTE Inversion; VMX conditional cache flushes, SMT vulnerable
+  Mds:                       Mitigation; Clear CPU buffers; SMT vulnerable
+  Meltdown:                  Mitigation; PTI
+  Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable
+  Old microcode:             Not affected
+  Reg file data sampling:    Not affected
+  Retbleed:                  Mitigation; IBRS
+  Spec rstack overflow:      Not affected
+  Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+  Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+  Spectre v2:                Mitigation; IBRS; IBPB conditional; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected
+  Srbds:                     Mitigation; Microcode
+  Tsa:                       Not affected
+  Tsx async abort:           Mitigation; TSX disabled
+  Vmscape:                   Mitigation; IBPB before exit to userspace
+root@dev-server:~# df -hT
+Filesystem     Type      Size  Used Avail Use% Mounted on
+/dev/loop22    ext4      9.8G  667M  8.6G   8% /
+none           tmpfs     492K  4.0K  488K   1% /dev
+efivarfs       efivarfs  496K  277K  215K  57% /sys/firmware/efi/efivars
+tmpfs          tmpfs      32G     0   32G   0% /dev/shm
+tmpfs          tmpfs      13G  8.2M   13G   1% /run
+tmpfs          tmpfs     5.0M     0  5.0M   0% /run/lock
+tmpfs          tmpfs     6.3G  8.0K  6.3G   1% /run/user/0
+root@dev-server:~# ip -br addr
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+eth0@if190       UP             2001:41d0:800:16e1::3a3/128 fe80::be24:11ff:fe9e:e0a9/64
+eth1@if191       UP             10.10.10.26/24 fe80::be24:11ff:feaf:a122/64
+root@dev-server:~# ss -tulpn
+Netid    State     Recv-Q    Send-Q       Local Address:Port         Peer Address:Port    Process
+udp      UNCONN    0         0               127.0.0.54:53                0.0.0.0:*        users:(("systemd-resolve",pid=153,fd=16))
+udp      UNCONN    0         0            127.0.0.53%lo:53                0.0.0.0:*        users:(("systemd-resolve",pid=153,fd=14))
+tcp      LISTEN    0         4096            127.0.0.54:53                0.0.0.0:*        users:(("systemd-resolve",pid=153,fd=17))
+tcp      LISTEN    0         100              127.0.0.1:25                0.0.0.0:*        users:(("master",pid=570,fd=13))
+tcp      LISTEN    0         4096         127.0.0.53%lo:53                0.0.0.0:*        users:(("systemd-resolve",pid=153,fd=15))
+tcp      LISTEN    0         4096                     *:22                      *:*        users:(("sshd",pid=803,fd=3),("systemd",pid=1,fd=99))
+tcp      LISTEN    0         100                  [::1]:25                   [::]:*        users:(("master",pid=570,fd=14))
+root@dev-server:~# ip route
+default via 10.10.10.1 dev eth1 proto static
+10.10.10.0/24 dev eth1 proto kernel scope link src 10.10.10.26
+```
+
+Now I guess I need to do this
+
+```
+Initial OS inspection
+SSH configuration and security
+Create a dedicated deploy user
+Firewall configuration
+Essential utilities
+Git and Node.js
+Nginx
+Applications and systemd
+GitHub Actions deployment
+```
+
+
+---------------------------------
+- `apt update`
+- `apt upgrade -y`
+now creating "deploy" user
+- `adduser deploy` - added passward and skipped options
+now giving deploy sudo functionality
+- `command -v sudo` - To check sudo is installed for not)
+- `usermod -aG sudo deploy` - now deploy belongs to sudo group
+- `su -u deploy` - login to deploy
+- `whoami` - display deploy
+- `sudo whoami` - display root
+always do apt update, apt upgrade in before any install
+- `sudo apt install nginx -y` - install nginx for root user
+- `sudo systemctl status nginx` - check if its running or not - Active: active (running) since Thu 2026-11-26 07:30:16 UTC; 10s ago
+- `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash` - install nvm
+- `sudo install curl -y` - install curl
+- `source ~/.nvm/nvm.sh` - reload nvm
+- `nvm --version` - check installation
+- `nvm install 26` - install node 26
+- `nvm -v, node -v, npm -v` - check versions
+- `sudo apt install git -y` - install git
+- `git --version` - check git installation
+I will not work on private repositories yet. so no need for vps->GitHub ssh configuration
+- `git config --global user.name "Your Name"' - set global user name, that means there is local user also
+- `git config --global user.email "your-email@example.com"` - set global email
+- `git config --global --list` - check glocal config
+Now I will create directories for applications hosting /var/www/ for static /opt/apps/ for dynamics
+- `sudo mkdir /opt/apps` - create folder
+- `sudo chown deploy:deploy /opt/apps` - change ownership to deploy
+- `ls -ld /opt/apps` - check folder configuration
+
+
+
+
+
+
+
+
+
+
+
+
+
+
